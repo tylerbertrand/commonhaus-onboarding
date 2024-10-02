@@ -2,9 +2,13 @@
 
 Develocity provides [Build Scans](https://gradle.com/gradle-enterprise-solutions/build-scan-root-cause-analysis-data/) and a remote [build cache](https://gradle.com/gradle-enterprise-solutions/build-cache/) for both local and CI builds. For Maven users, it additionally provides local build caching (Gradle provides this natively). This guide walks through the necessary steps to connect your project to Develocity to begin publishing build scans.
 
-## Develocity user account creation
+## Develocity Project-Level Access Control and User Account Creation
 
-For developers to publish Build Scans and utilize the remote build cache, a Develocity user account with the `Developer` role is required. Similarly, a user account with the `CI Agent` role is required for CI builds. Contact `<contact>` to request the creation of these accounts.
+Develocity's "project-level access control" feature allows restricting certain data from certain projects to only be accessible by certain users. For Commonhaus projects, it is leveraged to prevent users and CI agents from publishing scans and remote build cache entries for projects other than their own. This helps to prevent a scenario where one project's credential is compromised and affects the entire Commonhaus ecosystem.
+
+For developers to publish Build Scans and utilize the remote build cache, a Develocity user account with the `Developer` role is required. Similarly, a user account with the `CI Agent` role is required for CI builds.
+
+Contact `<contact>` to request the creation of the Develocity project, project group, and user accounts for your project. The project ID of the project created here will later be used when configuring your build with the Develocity Gradle Plugin or Maven Extension to associate your project to this project in Develocity.
 
 ## Configuring the Develocity Gradle Plugin / Develocity Maven Extension
 
@@ -23,6 +27,7 @@ plugins {
 def isCI = System.getenv('CI') != null // adjust to your CI provider
 
 develocity {
+    projectId = "<project-id>"
     server = 'https://develocity.commonhaus.dev'
     allowUntrustedServer = false
 
@@ -60,6 +65,7 @@ plugins {
 val isCI = System.getenv("CI") != null // adjust to your CI provider
 
 develocity {
+    projectId.set("<project-id>")
     server = "https://develocity.commonhaus.dev"
     allowUntrustedServer = false
 
@@ -100,7 +106,7 @@ For local builds, you can automatically provision an access key by executing eit
 
 For CI builds, you can first manually generate an access token for the Develocity CI user created for your project. How to do this is described [here](https://docs.gradle.com/develocity/gradle-plugin/current/#manual_access_key_configuration). Next, that token can be to authenticate with Develocity via the `DEVELOCITY_ACCESS_KEY` environment variable. This is described in more detail [here](https://docs.gradle.com/develocity/maven-extension/current/#via_environment_variable). Note that the environment variable format is `DEVELOCITY_ACCESS_KEY=«server host name»=«access key»`.
 
-You can find more details about how to set this up with specific CI providers [here](#ci-specific-setup).
+You can find more details about how to set this up with specific CI providers [here](#ci-provider-specific-setup).
 
 ### Configuring the Develocity Maven Extension
 
@@ -133,6 +139,7 @@ Create the file `.mvn/develocity.xml` and apply the following:
     <url>https://develocity.commonhaus.dev</url>
     <allowUntrusted>false</allowUntrusted>
   </server>
+  <projectId><!-- project-id --></projectId>
   <buildScan>
     <backgroundBuildScanUpload>#{isFalse(env['CI'])}</backgroundBuildScanUpload> <!-- adjust to your CI provider -->
       <obfuscation>
@@ -165,7 +172,7 @@ For local builds, you can automatically provision an access key by executing the
 
 For CI builds, you can first manually generate an access token for the Develocity CI user created for your project. How to do this is described [here](https://docs.gradle.com/develocity/maven-extension/current/#creating_access_keys). Next, that token can be to authenticate with Develocity via the `DEVELOCITY_ACCESS_KEY` environment variable. This is described in more detail [here](https://docs.gradle.com/develocity/maven-extension/current/#via_environment_variable). Note that the environment variable format is `DEVELOCITY_ACCESS_KEY=«server host name»=«access key»`.
 
-You can find more details about how to set this up with specific CI providers [here](#ci-specific-setup).
+You can find more details about how to set this up with specific CI providers [here](#ci-provider-specific-setup).
 
 ## CI Provider-Specific Setup
 
